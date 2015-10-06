@@ -1,8 +1,22 @@
 //
-// File: hw3.cc
+//  File: hw3.cc
 //
-#include <GL/glut.h>
-#include <stdlib.h> 
+//  Created by Lu Beibei on 10/5/15.
+//  Copyright © 2015 Lu Beibei. All rights reserved.
+//
+
+// MacOS, Windows, Linux universal openGL framework
+#ifdef __APPLE__
+#  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
+#  include <GLUT/glut.h>
+#else
+#  include <GL/gl.h>
+#  include <GL/glu.h>
+#  include <GL/glut.h>
+#endif
+
+#include <stdlib.h>
 #include <math.h>
 #include <iostream>
 
@@ -18,6 +32,7 @@ const int NUM_ITEMS=10;		// max number of different mobile objects
 float theta[NUM_ITEMS];		// angles of the mobile objects
 float deltaTheta[NUM_ITEMS];// how much each angle changes during each tick
 bool animate;
+float animationSpeed = 1;   // default animation speed
 
 // constants for angle offsets into theta and deltaTheta arrays for each
 // type of mobile object
@@ -30,18 +45,18 @@ const int TYPE1_THETA = 2;
 // drawUnitPolygon draws a unit regular polygon in the x-y plane centered
 // around the origin
 void drawUnitPolygon(int numSides) {
-	double theta = 0.0;
-	double deltaTheta = 2.0 * M_PI / numSides;
-	double x, y;
-
-	glBegin( GL_POLYGON );
-	for (int i = 0; i < numSides; i++) {
-		x = cos(theta);
-		y = sin(theta);
-		glVertex3f(x, y, 0.0);
-		theta += deltaTheta;
-	}
-	glEnd();
+    double theta = 0.0;
+    double deltaTheta = 2.0 * M_PI / numSides;
+    double x, y;
+    
+    glBegin( GL_POLYGON );
+    for (int i = 0; i < numSides; i++) {
+        x = cos(theta);
+        y = sin(theta);
+        glVertex3f(x, y, 0.0);
+        theta += deltaTheta;
+    }
+    glEnd();
 }
 
 //
@@ -57,32 +72,32 @@ void drawUnitPolygon(int numSides) {
 // was invoked.
 //
 void circleObject() {
-	// save the current frame so we can return later
-	glPushMatrix();
-
-	// draw the string
-	glBegin( GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(0, -1, 0);
-	glEnd();
-
-	// rotate around the y-axis and move to the end of the string
-	glTranslatef(0, -1, 0);
-	glRotatef(theta[CIRCLE_THETA], 0, 1, 0);
-
-	// move the frame so the origin is at the center of a unit polygon
-	glTranslatef( 0, -1, 0 );
-
-	// We want a vertex to be at the end of the string, and drawUnitPolygon
-	// defines the first vertex of the polygon on the x-axis.  Rotate the
-	// frame so this vertex will be on the y-axis.
-	glRotatef( 90, 0, 0, 1 );
-
-	// draw the circle (approximated by a 30-sided polygon)
-	drawUnitPolygon(30);
-
-	// return to original frame
-	glPopMatrix();
+    // save the current frame so we can return later
+    glPushMatrix();
+    
+    // draw the string
+    glBegin( GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, -1, 0);
+    glEnd();
+    
+    // rotate around the y-axis and move to the end of the string
+    glTranslatef(0, -1, 0);
+    glRotatef(theta[CIRCLE_THETA], 0, 1, 0);
+    
+    // move the frame so the origin is at the center of a unit polygon
+    glTranslatef( 0, -1, 0 );
+    
+    // We want a vertex to be at the end of the string, and drawUnitPolygon
+    // defines the first vertex of the polygon on the x-axis.  Rotate the
+    // frame so this vertex will be on the y-axis.
+    glRotatef( 90, 0, 0, 1 );
+    
+    // draw the circle (approximated by a 30-sided polygon)
+    drawUnitPolygon(30);
+    
+    // return to original frame
+    glPopMatrix();
 }
 
 //
@@ -97,33 +112,33 @@ void circleObject() {
 // Upon return, the current frame will be the same frame as when the function
 // was invoked.
 //
-void squareObject() {
-	// save the current frame so we can return later
-	glPushMatrix();
-
-	// draw the string
-	glBegin( GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(0, -0.8, 0);
-	glEnd();
-
-	// rotate around the y-axis and move to the end of the string
-	glTranslatef(0, -0.8, 0);
-	glRotatef(theta[SQUARE_THETA], 0, 1, 0);
-
-	// move the frame so the origin is at the center of a unit polygon
-	glTranslatef( 0, -1, 0 );
-
-	// We want a vertex to be at the end of the string, and drawUnitPolygon
-	// defines the first vertex of the polygon on the x-axis.  Rotate the
-	// frame so this vertex will be on the y-axis.
-	glRotatef( 90, 0, 0, 1 );
-
-	// draw the square
-	drawUnitPolygon(4);
-
-	// return to original frame
-	glPopMatrix();
+void polygonObject(int sides) {
+    // save the current frame so we can return later
+    glPushMatrix();
+    
+    // draw the string
+    glBegin( GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, -0.8, 0);
+    glEnd();
+    
+    // rotate around the y-axis and move to the end of the string
+    glTranslatef(0, -0.8, 0);
+    glRotatef(theta[SQUARE_THETA], 0, 1, 0);
+    
+    // move the frame so the origin is at the center of a unit polygon
+    glTranslatef( 0, -1, 0 );
+    
+    // We want a vertex to be at the end of the string, and drawUnitPolygon
+    // defines the first vertex of the polygon on the x-axis.  Rotate the
+    // frame so this vertex will be on the y-axis.
+    glRotatef( 90, 0, 0, 1 );
+    
+    // draw the polygon
+    drawUnitPolygon(sides);
+    
+    // return to original frame
+    glPopMatrix();
 }
 
 //
@@ -139,198 +154,293 @@ void squareObject() {
 // Upon return, the current frame will be the same frame as when the function
 // was invoked.
 //
-void type1Object()
+
+void type3Object()
 {
-	// save the frame so we can return later
-	glPushMatrix();
-
-	// draw the string and move to the end of the string
-	glColor3f( 1, 1, 1 );
-	glBegin( GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(0, -1.1, 0);
-	glEnd();
-	glTranslatef(0, -1.1, 0);
-	glRotatef(theta[TYPE1_THETA], 0, 1, 0);
-
-	// draw the arm, centered at the end of the string
-	glColor3f( 1, 1, 1 );
-	glBegin( GL_LINES );
-	glVertex3f( 1.5, 0, 0 );
-	glVertex3f( -1.5, 0, 0 );
-	glEnd();
-
-	// draw a circle dangling from one end of the arm.  After drawing the
-	// circle, the frame will be back to the center of the arm.
-	glPushMatrix();
-	glTranslatef( -1.5, 0., 0 );
-	glColor3f( 1, 0, 0 );
-	circleObject();
-	glPopMatrix();
-
-	// draw a square at the other end of the arm
-	glTranslatef( 1.5, 0, 0 );
-	glColor3f( 0, 1, 1 );
-	glScalef( 0.75, 0.75, 0.75 );
-	squareObject();
-
-	// return to original frame
-	glPopMatrix();
+    glPushMatrix();
+    glColor3f( 0, 1, 1 );
+    glBegin( GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, -1.1, 0);
+    glEnd();
+    glTranslatef(0, -1.1, 0);
+    glRotatef(theta[TYPE1_THETA], 0, 1, 0);
+    
+    // Third arm
+    
+    glColor3f( 1, 0, 1 );
+    glBegin( GL_LINES );
+    glVertex3f( 1.5, 0, 0 );
+    glVertex3f( -1.5, 0, 0 );
+    glEnd();
+    
+    glPushMatrix();
+    glTranslatef( -1.5, 0, 0 );
+    glColor3f( 0, 0, 1 );
+    polygonObject(6);
+    glPopMatrix();
+    
+    glTranslatef( 1.5, 0, 0 );
+    glColor3f( 0.5, 0.5, 0 );
+    glScalef( 0.75, 0.75, 0.75 );
+    polygonObject(8);
+    glPopMatrix();
+    
 }
 
+void type2Object()
+{
+    glPushMatrix();
+    glColor3f( 0.5, 0, 0.5 );
+    glBegin( GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, -1.1, 0);
+    glEnd();
+    
+    glTranslatef(0, -1.1, 0);
+    glRotatef(theta[TYPE1_THETA], 0, 1, 0);
+    
+    
+    // Second arm
+    
+    glColor3f( 1, 1, 1 );
+    glBegin( GL_LINES );
+    glVertex3f( 3.0, 0, 0 );
+    glVertex3f( -1.5, 0, 0 );
+    glEnd();
+    
+    glPushMatrix();
+    glTranslatef( -1.5, 0., 0 );
+    glColor3f( 0.5, 0.5, 0 );
+    polygonObject(4);
+    glPopMatrix();
+    
+    glTranslatef( 2.0, 0, 0 );
+    glColor3f( 0.5, 1, 0 );
+    circleObject();
+    type3Object();
+    glPopMatrix();
+}
+
+void type1Object()
+{
+    // save the frame so we can return later
+    glPushMatrix();
+    
+    // draw the string and move to the end of the string
+    glColor3f( 1, 1, 1 );
+    glBegin( GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, -1.1, 0);
+    glEnd();
+    glTranslatef(0, -1.1, 0);
+    glRotatef(theta[TYPE1_THETA], 0, 1, 0);
+    
+    // draw the arm, centered at the end of the string
+    glColor3f( 1, 1, 1 );
+    glBegin( GL_LINES );
+    glVertex3f( 1.5, 0, 0 );
+    glVertex3f( -1.5, 0, 0 );
+    glEnd();
+    
+    // draw a circle dangling from one end of the arm.  After drawing the
+    // circle, the frame will be back to the center of the arm.
+    glPushMatrix();
+    glTranslatef( -1.5, 0., 0 );
+    glColor3f( 1, 0, 0 );
+    circleObject();
+    glPopMatrix();
+    
+    // draw a square at the other end of the arm
+    glPushMatrix();
+    glTranslatef( 1.5, 0, 0 );
+    glColor3f( 0, 1, 1 );
+    glScalef( 0.75, 0.75, 0.75 );
+    polygonObject(3);
+    
+    glPopMatrix();
+    //create the triangle at the end of the first arm
+    glPushMatrix();
+    glTranslatef(3.0,0,0);
+    glColor3f(0,1,0.5);
+    glScalef(0.75,0.75,0.75);
+    polygonObject(5);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-1,0,0);
+    glRotatef(theta[TYPE1_THETA],0,1,0);
+    type2Object();
+
+    // return to original frame
+    glPopMatrix();
+}
 
 void setCamera(void) {
-	// sets the camera position in the world
-
-	// set the view transformation
-	glLoadIdentity();
-	glTranslatef(0.0, 0.0, -eyeDist);
-	glRotatef(eyePhi, 1.0, 0.0, 0.0);
-	glRotatef(eyeTheta, 0.0, 1.0, 0.0);
+    // sets the camera position in the world
+    
+    // set the view transformation
+    glLoadIdentity();
+    glTranslatef(0.0, 0.0, -eyeDist);
+    glRotatef(eyePhi, 1.0, 0.0, 0.0);
+    glRotatef(eyeTheta, 0.0, 1.0, 0.0);
 }
 
 void init(void) {
-	// define clear color to be black
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-
-	// shade polygons as flat surfaces
-	glShadeModel(GL_FLAT);
-
-	// do hidden surface removal
-	glEnable(GL_DEPTH_TEST);
-
-	// initialize state variables
-	for( int i=0; i<NUM_ITEMS; i++ )
-	{
-		theta[i] = 0.0;
-	}
-
-	deltaTheta[CIRCLE_THETA] = 2.0;
-	deltaTheta[SQUARE_THETA] = -5.0;
-	deltaTheta[TYPE1_THETA] = 3.0;
-
-	animate = false;
+    // define clear color to be black
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    
+    // shade polygons as flat surfaces
+    glShadeModel(GL_FLAT);
+    
+    // do hidden surface removal
+    glEnable(GL_DEPTH_TEST);
+    
+    // initialize state variables
+    for( int i=0; i<NUM_ITEMS; i++ )
+    {
+        theta[i] = 0.0;
+    }
+    
+    deltaTheta[CIRCLE_THETA] = 2.0;
+    deltaTheta[SQUARE_THETA] = -5.0;
+    deltaTheta[TYPE1_THETA] = 3.0;
+    
+    animate = false;
 }
 
 void display(void) {
-	// clear frame buffer and depth buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// set viewpoint
-	glLoadIdentity();
-
-	// set the camera
-	setCamera();
-
-	// draw things in the world
-
-	// the top of the main string will be at (0, 2, 0 );
-	glTranslatef( 0, 2, 0 );
-
-	// the main mobile arm will be a type 2 arm
-	type1Object();
-
-	// display things
-	glutSwapBuffers();
+    // clear frame buffer and depth buffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // set viewpoint
+    glLoadIdentity();
+    
+    // set the camera
+    setCamera();
+    
+    // draw things in the world
+    
+    // the top of the main string will be at (0, 2, 0 );
+    glTranslatef( 0, 2, 0 );
+    
+    // the main mobile arm will be a type 2 arm
+    type1Object();
+    
+    // display things
+    glutSwapBuffers();
 }
 
 void reshape(int w, int h) {
-	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(60.0, (GLfloat) w / (GLfloat) h, 0.01, 20.0);
-	glMatrixMode(GL_MODELVIEW);
+    glViewport(0, 0, (GLsizei) w, (GLsizei) h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60.0, (GLfloat) w / (GLfloat) h, 0.01, 20.0);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void timer( int val )
 {
-	if( animate )
-	{
-		// register timer to go off in 1/10 second
-		glutTimerFunc( 100, timer, 0 );
-
-		// update all angles
-		for( int i=0; i<NUM_ITEMS; i++ )
-		{
-			theta[i] += deltaTheta[i];
-		}
-
-		glutPostRedisplay();
-	}
+    if( animate )
+    {
+        // register timer to go off in 1/10 second
+        glutTimerFunc( 100, timer, 0 );
+        
+        // update all angles
+        for( int i=0; i<NUM_ITEMS; i++ )
+        {
+            theta[i] += animationSpeed*deltaTheta[i];
+        }
+        
+        glutPostRedisplay();
+    }
 }
 
 void keyboard(unsigned char key, int x, int y) {
-	switch (key) {
-	case 27: /* esc */
-	case 'Q':
-	case 'q':
-		exit(0);
-		break;
+    switch (key) {
+        case 27: /* esc */
+        case 'Q':
+        case 'q':
+            exit(0);
+            break;
+            
+        case '4': // left
+            eyeTheta += 5;
+            glutPostRedisplay();
+            break;
+        case '6': //right
+            eyeTheta -= 5;
+            glutPostRedisplay();
+            break;
+        case '2': //down
+            eyePhi -= 5;
+            // don't let elevation go past 90 or -90
+            if (eyePhi > 90.0)
+                eyePhi = 90.0;
+            else if (eyePhi < -90.0)
+                eyePhi = -90.0;
+            glutPostRedisplay();
+            break;
+        case '8': //up
+            eyePhi += 5;
+            // don't let elevation go past 90 or -90
+            if (eyePhi > 90.0)
+                eyePhi = 90.0;
+            else if (eyePhi < -90.0)
+                eyePhi = -90.0;
+            glutPostRedisplay();
+            break;
+        case '3': //pgDn (back up)
+            eyeDist += 0.5;
+            glutPostRedisplay();
+            break;
+        case '9': //pgUp (move forward)
+            eyeDist -= 0.5;
+            glutPostRedisplay();
+            break;
+            
+        case 'a':
+        case 'A':
+            animate = !animate;
+            if( animate )
+                glutTimerFunc( 100, timer, 0 );
+            break;
+            
+        case '+':   // Increase the animation speed
+            animationSpeed += 0.1;
+            glutPostRedisplay();
+            break;
+            
+        case '-':   // Decrease the animation speed
+            if(animationSpeed > 0){
+                animationSpeed -= 0.1;
+            }
+            glutPostRedisplay();
+            break; 
 
-	case '4': // left
-		eyeTheta += 5;
-		glutPostRedisplay();
-		break;
-	case '6': //right
-		eyeTheta -= 5;
-		glutPostRedisplay();
-		break;
-	case '2': //down
-		eyePhi -= 5;
-		// don't let elevation go past 90 or -90
-		if (eyePhi > 90.0)
-			eyePhi = 90.0;
-		else if (eyePhi < -90.0)
-			eyePhi = -90.0;
-		glutPostRedisplay();
-		break;
-	case '8': //up
-		eyePhi += 5;
-		// don't let elevation go past 90 or -90
-		if (eyePhi > 90.0)
-			eyePhi = 90.0;
-		else if (eyePhi < -90.0)
-			eyePhi = -90.0;
-		glutPostRedisplay();
-		break;
-	case '3': //pgDn (back up)
-		eyeDist += 0.5;
-		glutPostRedisplay();
-		break;
-	case '9': //pgUp (move forward)
-		eyeDist -= 0.5;
-		glutPostRedisplay();
-		break;
-
-	case 'a':
-	case 'A':
-		animate = !animate;
-		if( animate )
-			glutTimerFunc( 100, timer, 0 );
-		break;
-	}
+    }
 }
 
 int main(int argc, char** argv) {
-	// initialize glut, create window, etc.
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(500, 500);
-	glutInitWindowPosition(100, 100);
-	glutCreateWindow("Mobile App");
-
-	// initialize program data structures
-	init();
-
-	// register callbacks
-	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
-	glutKeyboardFunc(keyboard);
-
-	// do everything!
-	glutMainLoop();
-
-	return 0;
-
+    // initialize glut, create window, etc.
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(500, 500);
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow("Mobile App");
+    
+    // initialize program data structures
+    init();
+    
+    // register callbacks
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
+    
+    // do everything!
+    glutMainLoop();
+    
+    return 0;
+    
 }
 
