@@ -48,29 +48,199 @@ void setCamera(void)
 // sphereNumIndices will be set appropriately.
 void defineUnitSphere( int numSides, int numStacks )
 {
+    double theta;
+    double deltaTheta = 2.0 * M_PI / numSides;
+    double xLeft, yLeft, xRight, yRight;
+    double x, y, z;
+    double deltaZ = 2.0 / numStacks;
+    int pos;
+    
+    // define the vertices and normals
+    GLfloat vertices[numSides*(numStacks+1)][3];
+    GLfloat normals[numSides*(numStacks+1)][3];
+    
+    // the first line will be at theta=0
+    theta = 0.0;
+    pos = 0;  // start filling array at element 0
+    for( int i=0; i<numSides; i++ ) {
+        // calculate the x and y coordinates of the vertices along this line
+        x = cos( theta );
+        y = sin( theta );
+        
+        // z will start at the top of the cylinder
+        z = 1.0;
+        
+        // define the vertices and normals along this line
+        for( int j=0; j<numStacks+1; j++ ) {
+            vertices[pos][0] = x;
+            vertices[pos][1] = y;
+            // make sure last vertex is at z = -1.0
+            if( j < numStacks )
+                vertices[pos][2] = z;
+            else
+                vertices[pos][2] = -1.0;
+            
+            normals[pos][0] = x;
+            normals[pos][1] = y;
+            normals[pos][2] = 0.0;
+            
+            pos++;
+            
+            // calculate z value for next iteration
+            z -= deltaZ;
+        }
+        
+        // increment theta for the next line
+        theta += deltaTheta;
+    }
+    
+    // save the vertices and normals in the GPU
+    glGenBuffers( 1, &sphereVertexBuffer );
+    glBindBuffer( GL_ARRAY_BUFFER, sphereVertexBuffer );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW );
+    
+    glGenBuffers( 1, &sphereNormalBuffer );
+    glBindBuffer( GL_ARRAY_BUFFER, sphereNormalBuffer );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW );
+    
+    // define the indices
+    sphereNumIndices = 6 * numStacks * numSides;
+    GLuint vertexIndices[sphereNumIndices];
+    
+    pos = 0;
+    for( int i=0; i<numSides; i++ ) {
+        // define the indices of the first vertex on the left and right
+        int leftBase = i*(numStacks+1);
+        int rightBase = i<(numSides-1) ? (i+1)*(numStacks+1) : 0;
+        for( int j=0; j<numStacks; j++ ) {
+            // define the first triangle
+            vertexIndices[pos++] = leftBase;
+            vertexIndices[pos++] = leftBase + 1;
+            vertexIndices[pos++] = rightBase + 1;
+            
+            // define the second triangle
+            vertexIndices[pos++] = leftBase;
+            vertexIndices[pos++] = rightBase + 1;
+            vertexIndices[pos++] = rightBase;
+            
+            // update bases for next stack
+            leftBase++;
+            rightBase++;
+        }
+    }
+    
+    // store indices in GPU
+    glGenBuffers( 1, &sphereIndexBuffer );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, sphereIndexBuffer );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(vertexIndices), vertexIndices,
+                 GL_STATIC_DRAW );
 }
 
 // display the sphere whose attributes have been stored in GPU buffers
-// sphereVertexBuffer, sphereNormalBuffer, and sphereIndexBuffer, with 
+// sphereVertexBuffer, sphereNormalBuffer, and sphereIndexBuffer, with
 // sphereNumIndices indices.
 void displaySphere()
 {
+    // enable vertices
+    glEnableClientState( GL_VERTEX_ARRAY );
+    glBindBuffer( GL_ARRAY_BUFFER, sphereVertexBuffer );
+    glVertexPointer( 3, GL_FLOAT, 0, 0 );
+    
+    // enable normals
+    glEnableClientState( GL_NORMAL_ARRAY );
+    glBindBuffer( GL_ARRAY_BUFFER, sphereNormalBuffer );
+    glNormalPointer( GL_FLOAT, 0, 0);
+    
+    // bind the index array
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, sphereIndexBuffer );
+    
+    // now draw the cylinder
+    glDrawElements( GL_TRIANGLES, sphereNumIndices, GL_UNSIGNED_INT, 0 );
+    
+    // disable things that we enabled
+    glDisableClientState( GL_VERTEX_ARRAY );
+    glDisableClientState( GL_NORMAL_ARRAY );
+    
+    // no buffers selected now
+    glBindBuffer( GL_ARRAY_BUFFER, 0 );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+    
 }
 
 // define the vertices, normals, and triangles for a pyramid centered
 // around the origin, and store these in GPU buffers.  Global variables
-// pyramidVertexBuffer, pyramidColorBuffer, pyramidIndexBuffer, and 
+// pyramidVertexBuffer, pyramidColorBuffer, pyramidIndexBuffer, and
 // pyramidNumIndices will be set appropriately.
 void definePyramid( )
 {
+    // Define the vertices, colors, and triangle indices for a pyramid with the apex at (0,1,0) and base verteices at (-1,-1,1) (1,-1,1) (1,-1,-1) and (-1,-1,-1). Normals are not defined for the vertices, but an unique color must be defined for each vertex. The vertices, colors, and triangle indices must be stored in the GPU, and global variables pyramidVertexBuffer, pyramidColorBuffer, pyramidndexBuffer, and pyramidNumIndices must be appropriately defined.
+    
+    GLfloat vertices[][3] = {
+        {0,1,0}, {-1,-1,1}, {1,-1,1}, {1,-1,-1},
+        {-1,-1,-1}
+    };
+    GLfloat colors[][3] = {
+        {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
+        {1, 0, 0}
+    };
+    GLuint indices[][3] = {
+        {0,1,2}, //front
+        {0,4,3}, // back
+        {0,1,4}, // left
+        {0,2,3}, // right
+        {1,2,3}, {3,4,1}  // bottom
+    };
+    
+    // store vertices in GPU
+    glGenBuffers( 1, &pyramidVertexBuffer );
+    glBindBuffer( GL_ARRAY_BUFFER, pyramidVertexBuffer );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    
+    // store vertex colors in GPU
+    glGenBuffers( 1, &pyramidColorBuffer );
+    glBindBuffer( GL_ARRAY_BUFFER, pyramidColorBuffer );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    
+    // store triangle indices in GPU
+    glGenBuffers( 1, &pyramidIndexBuffer );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, pyramidIndexBuffer );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                 GL_STATIC_DRAW );
+    
+    pyramidNumIndices = 18;
+    
 }
 
 // display the pyramid whose attributes have been stored in GPU buffers
-// pyramidVertexBuffer, pyramidColorBuffer, and pyramidIndexBuffer, with 
+// pyramidVertexBuffer, pyramidColorBuffer, and pyramidIndexBuffer, with
 // pyramidNumIndices indices.
 void displayPyramid()
 {
+    // enable vertices
+    glEnableClientState( GL_VERTEX_ARRAY );
+    glBindBuffer( GL_ARRAY_BUFFER, pyramidVertexBuffer );
+    glVertexPointer( 3, GL_FLOAT, 0, 0 );
+    
+    // enable vertex colors
+    glEnableClientState( GL_COLOR_ARRAY );
+    glBindBuffer( GL_ARRAY_BUFFER, pyramidColorBuffer );
+    glColorPointer( 3, GL_FLOAT, 0, 0 );
+    
+    // bind the index array
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, pyramidIndexBuffer );
+    
+    // now draw the cylinder
+    glDrawElements( GL_TRIANGLES, pyramidNumIndices, GL_UNSIGNED_INT, 0 );
+    
+    // disable things that we enabled
+    glDisableClientState( GL_VERTEX_ARRAY );
+    glDisableClientState( GL_NORMAL_ARRAY );
+    
+    // no buffers selected now
+    glBindBuffer( GL_ARRAY_BUFFER, 0 );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 }
+
 
 void init(void)
 {
