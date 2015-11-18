@@ -1,15 +1,31 @@
 //
 // File: hw6.cc
 //
-//  Author: 
+//  Author: Beibei Lu
 //
 // This program defines the vertices, normals, and triangles for several
 // geometric shapes, stores these in GPU buffers, then draws several shapes
 // in the world.
 //
 
-#include <GL/glew.h>
-#include <GL/glut.h>
+#ifdef __APPLE__
+#  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
+//#  include <OpenGL/glew.h>
+#  include <OpenGL/gl3.h>
+#  include <GLUT/glut.h>
+#  include <OpenGL/gl3.h>
+#else
+#  include <GL/gl.h>
+#  include <GL/glu.h>
+#  include <GL/glut.h>
+#  include <GL/glew.h>
+#endif
+
+#ifndef __APPLE__
+glewInit();
+#endif
+
 #include <stdlib.h> 
 #include <math.h>
 #include <iostream>
@@ -48,11 +64,14 @@ void setCamera(void)
 // sphereNumIndices will be set appropriately.
 void defineUnitSphere( int numSides, int numStacks )
 {
-    double theta;
+    double theta1;
+    double theta2;
     double deltaTheta = 2.0 * M_PI / numSides;
     double xLeft, yLeft, xRight, yRight;
-    double x, y, z;
+    double x, y, z, r;
     double deltaZ = 2.0 / numStacks;
+    double deltaPhi = M_PI/ numStacks;
+    double phi;
     int pos;
     
     // define the vertices and normals
@@ -60,18 +79,19 @@ void defineUnitSphere( int numSides, int numStacks )
     GLfloat normals[numSides*(numStacks+1)][3];
     
     // the first line will be at theta=0
-    theta = 0.0;
+    theta1 = 0.0;
     pos = 0;  // start filling array at element 0
     for( int i=0; i<numSides; i++ ) {
-        // calculate the x and y coordinates of the vertices along this line
-        x = cos( theta );
-        y = sin( theta );
-        
-        // z will start at the top of the cylinder
-        z = 1.0;
+        phi = 0.0;
         
         // define the vertices and normals along this line
         for( int j=0; j<numStacks+1; j++ ) {
+            z = cos(phi);
+            r = sin(phi);
+            
+            x = r * cos(theta1);
+            y = r * sin(theta1);
+            
             vertices[pos][0] = x;
             vertices[pos][1] = y;
             // make sure last vertex is at z = -1.0
@@ -82,16 +102,28 @@ void defineUnitSphere( int numSides, int numStacks )
             
             normals[pos][0] = x;
             normals[pos][1] = y;
-            normals[pos][2] = 0.0;
+            
+            if( j < numStacks )
+                normals[pos][2] = z;
+            else
+                normals[pos][2] = -1.0;
+            
+            normals[pos][0] = x;
+            normals[pos][1] = y;
+            
+            if( j < numStacks )
+                normals[pos][2] = z;
+            else
+                normals[pos][2] = -1.0;
             
             pos++;
             
             // calculate z value for next iteration
-            z -= deltaZ;
+            phi += deltaPhi;
         }
         
         // increment theta for the next line
-        theta += deltaTheta;
+        theta1 += deltaTheta;
     }
     
     // save the vertices and normals in the GPU
@@ -134,6 +166,7 @@ void defineUnitSphere( int numSides, int numStacks )
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, sphereIndexBuffer );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(vertexIndices), vertexIndices,
                  GL_STATIC_DRAW );
+
 }
 
 // display the sphere whose attributes have been stored in GPU buffers
