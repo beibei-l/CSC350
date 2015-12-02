@@ -1,7 +1,7 @@
 //
 // File: hw7.cc
 //
-//  Author: 
+//  Author: Beibei Lu
 //
 // This program creates a mesh that ripples.  The rippling is done in the
 // vertex shader.  Students will modify this to include rippling colors
@@ -26,6 +26,8 @@ using namespace std;
 static float theta=-30 * M_PI / 180.0;       // eye position to z-axis
 static float phi=30 * M_PI / 180.0;          // eye position to x-z plane
 static float dist=5.0;
+bool calcXWaveVal, calcZWaveVal, calcCenterWaveVal;
+
 
 // program state information
 bool animate;
@@ -38,12 +40,14 @@ glm::mat4 projection, ctm;
 GLuint vertexBuffer, indexBuffer;
 int numIndices;
 
+
+
 // shader uniform locations
 GLint ctmLocation, timeLocation;
 
 // vertex shader attribute locations
 GLint vPositionLocation;
-
+GLint calcXWaveL, calcZWaveL, calcCenterWaveL;
 // glsl shader program
 GLuint shaderProgram;
 
@@ -74,9 +78,9 @@ void defineMesh()
   for( int x=0; x<NUM_X; x++ )
     for( int z=0; z<NUM_Z; z++ )
       vertices[pos++] = glm::vec3( x*WIDTH_X/(NUM_X-1) - WIDTH_X/2.0,
-				   0.0,
-				   z*WIDTH_Z/(NUM_Z-1) - WIDTH_Z/2.0
-				   );
+           0.0,
+           z*WIDTH_Z/(NUM_Z-1) - WIDTH_Z/2.0
+           );
 
   // define the indices
   GLuint indices[ 6 * (NUM_X-1) * (NUM_Z-1) ];
@@ -107,7 +111,7 @@ void defineMesh()
   glGenBuffers( 1, &indexBuffer );
   glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer );
   glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, 
-		GL_STATIC_DRAW );
+    GL_STATIC_DRAW );
 
   // remember the number of indices
   numIndices = 6 * (NUM_X-1) * (NUM_Z-1);
@@ -119,12 +123,12 @@ void displayMesh()
   glEnableVertexAttribArray( vPositionLocation );
   glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer );
   glVertexAttribPointer( vPositionLocation, // which attribute
-			 3, // number of elements 
-			 GL_FLOAT, // element type
-			 GL_FALSE, // do not convert ints to [-1,1]
-			 0, // distance between element
-			 0 // use the current GL_ARRAY_BUFFER
-			 );
+       3, // number of elements 
+       GL_FLOAT, // element type
+       GL_FALSE, // do not convert ints to [-1,1]
+       0, // distance between element
+       0 // use the current GL_ARRAY_BUFFER
+       );
 
   // bind the index array
   glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer );
@@ -153,7 +157,11 @@ void init(void)
   ctmLocation = glGetUniformLocation( shaderProgram, "ctm" );
   timeLocation = glGetUniformLocation( shaderProgram, "time" );
   vPositionLocation = glGetAttribLocation( shaderProgram, "vPosition" );
+calcXWaveL= glGetUniformLocation( shaderProgram, "calcXWave" );
+calcZWaveL= glGetUniformLocation( shaderProgram, "calcZWave" );
+calcCenterWaveL= glGetUniformLocation( shaderProgram, "calcCenterWave" );
 
+//calcZWave,calcCenterWave;
   // shade polygons as flat surfaces
   glShadeModel(GL_SMOOTH);
 
@@ -165,6 +173,10 @@ void init(void)
 
   animate = false;
   rippleTime = 0.0;
+
+calcXWaveVal=false;
+calcZWaveVal=false;
+calcCenterWaveVal=false;
 }
 
 void display(void)
@@ -178,6 +190,9 @@ void display(void)
   // send ctm and rippleTime to gpu
   glUniformMatrix4fv( ctmLocation, 1, GL_FALSE, glm::value_ptr(ctm) ); 
   glUniform1f( timeLocation, rippleTime ); 
+  glUniform1i( calcXWaveL, calcXWaveVal ); 
+  glUniform1i( calcZWaveL, calcZWaveVal ); 
+  glUniform1i( calcCenterWaveL, calcCenterWaveVal ); 
 
   // draw the mesh as lines
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -256,6 +271,35 @@ void keyboard(unsigned char key, int x, int y)
     animate = !animate;
     if( animate )
       glutTimerFunc( 100, timer, 0 );
+    break;
+  case 'z': 
+if(    calcZWaveVal==true){
+    calcZWaveVal=false;
+}
+else{
+    calcZWaveVal=true;
+}
+    glutPostRedisplay();
+    break;
+
+  case 'x': 
+if(    calcXWaveVal==true){
+    calcXWaveVal=false;
+}
+else{
+    calcXWaveVal=true;
+}
+    glutPostRedisplay();
+    break;
+
+  case 'c': 
+if(    calcCenterWaveVal==true){
+    calcCenterWaveVal=false;
+}
+else{
+    calcCenterWaveVal=true;
+}
+    glutPostRedisplay();
     break;
 
   }
